@@ -14,6 +14,8 @@ class CentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     var centralManager: CBCentralManager!
     var discoveredPeripheral: CBPeripheral?
     var delegate: CentralManagerDelegate!
+    var backgroundQueue: DispatchQueue!
+    var mainQueue: DispatchQueue!
     
     override init() {
         super.init()
@@ -23,7 +25,8 @@ class CentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     init(with centralDelegate: CentralManagerDelegate) {
         super.init()
         delegate = centralDelegate
-        centralManager = CBCentralManager(delegate: self, queue: nil)
+        backgroundQueue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.sample.blemanager")")
+        centralManager = CBCentralManager(delegate: self, queue: backgroundQueue)
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -43,7 +46,9 @@ class CentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             discoveredPeripheral = peripheral
             if let name = advertisementData[CBAdvertisementDataLocalNameKey]
             {
-                delegate.updateName(string: name as! String)
+                DispatchQueue.main.async {
+                    self.delegate.updateName(string: name as! String)
+                }
             }
             centralManager.connect(peripheral, options: nil)
         }
@@ -87,7 +92,9 @@ class CentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             if let stringFromData = String(data: data, encoding: .utf8)
             {
                 print("get value for characteristic===\(stringFromData))")
-                delegate.updateValue(string: stringFromData)
+                DispatchQueue.main.async {
+                    self.delegate.updateValue(string: stringFromData)
+                }
             }
         }
     }

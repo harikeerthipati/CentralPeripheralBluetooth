@@ -13,17 +13,11 @@ class PeripheralManager: NSObject, CBPeripheralManagerDelegate {
 
     var peripheralManager: CBPeripheralManager!
     var transferCharacteristic: CBMutableCharacteristic!
-    var delegate: PeripheralManagerDelegate!
-
+    var queue: DispatchQueue!
     override init() {
         super.init()
-        peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
-    }
-    
-    init(with peripheralDelegate: PeripheralManagerDelegate) {
-        super.init()
-        delegate = peripheralDelegate
-        peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
+        queue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.sample.blemanager")")
+        peripheralManager = CBPeripheralManager(delegate: self, queue: queue)
     }
     
     func startAdvertising()
@@ -38,7 +32,10 @@ class PeripheralManager: NSObject, CBPeripheralManagerDelegate {
     }
     
     func updateValue(string: String) {
-        peripheralManager.updateValue(string.data(using: .utf8)!, for: transferCharacteristic, onSubscribedCentrals: nil)
+        
+        queue.async {
+            self.peripheralManager.updateValue(string.data(using: .utf8)!, for: transferCharacteristic, onSubscribedCentrals: nil)
+        }
     }
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
@@ -70,9 +67,4 @@ class PeripheralManager: NSObject, CBPeripheralManagerDelegate {
         let didSend = peripheralManager.updateValue(data!, for: transferCharacteristic, onSubscribedCentrals: nil)
         print("did send\(didSend)")
     }
-}
-
-protocol PeripheralManagerDelegate {
-    
-    func updateValue(string: String)
 }
