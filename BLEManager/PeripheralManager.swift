@@ -34,7 +34,7 @@ class PeripheralManager: NSObject, CBPeripheralManagerDelegate {
     func updateValue(string: String) {
         
         queue.async {
-            self.peripheralManager.updateValue(string.data(using: .utf8)!, for: transferCharacteristic, onSubscribedCentrals: nil)
+            self.peripheralManager.updateValue(string.data(using: .utf8)!, for: self.transferCharacteristic, onSubscribedCentrals: nil)
         }
     }
     
@@ -45,7 +45,7 @@ class PeripheralManager: NSObject, CBPeripheralManagerDelegate {
             return
         }
         print("created characteristic")
-        transferCharacteristic = CBMutableCharacteristic(type: CBUUID(string: characteristicUUID), properties: .notify, value: nil, permissions: .readable)
+        transferCharacteristic = CBMutableCharacteristic(type: CBUUID(string: characteristicUUID), properties: .notify, value: nil, permissions: .writeable)
         let transferService = CBMutableService(type: CBUUID(string: serviceUUID), primary: true)
         transferService.characteristics = [transferCharacteristic]
         peripheralManager.add(transferService)
